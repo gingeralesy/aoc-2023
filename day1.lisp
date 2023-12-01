@@ -45,30 +45,32 @@
   (let ((sum 0))
     (declare (type (unsigned-byte 32) sum))
     (do-file (line "day1.txt" sum)
-      (let (first-digit last-digit)
+      (let ((length (length line))
+            first-digit last-digit)
         (dotimes (i (length line))
-          (let ((ch (char line i)))
-            (when (digit-char-p ch)
-              (unless first-digit
-                (setf first-digit ch))
-              (setf last-digit ch))))
-        (setf sum (+ sum (* 10 (d1-char->number first-digit)) (d1-char->number last-digit)))))))
+          (let ((ch-a (char line i))
+                (ch-b (char line (- length i 1))))
+            (when (and (null first-digit) (digit-char-p ch-a))
+              (setf first-digit (d1-char->number ch-a)))
+            (when (and (null last-digit) (digit-char-p ch-b))
+              (setf last-digit (d1-char->number ch-b)))
+            (when (and first-digit last-digit) (return))))
+        (setf sum (+ sum (* 10 first-digit) last-digit))))))
 
 ;; Answer: 54597
 
 (defun d1p2 ()
   (declare (optimize (speed 3)))
   (let ((sum 0)
-        (parser (cl-ppcre:create-scanner "^(\\d|one|two|three|four|five|six|seven|eight|nine)")))
+        (start-scanner
+          (cl-ppcre:create-scanner "(\\d|one|two|three|four|five|six|seven|eight|nine)"))
+        (end-scanner
+          (cl-ppcre:create-scanner "(enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|\\d)")))
     (declare (type (unsigned-byte 32) sum))
     (do-file (line "day1.txt" sum)
-      (let (first-digit last-digit)
-        (dotimes (i (length line))
-          (let ((value (cl-ppcre:scan-to-strings parser (subseq line i))))
-            (when value
-              (unless first-digit (setf first-digit value))
-              (setf last-digit value))))
-        (unless (and first-digit last-digit) (error "Invalid line: ~a" line))
-        (setf sum (+ sum (* 10 (d1-string->number first-digit)) (d1-string->number last-digit)))))))
+      (setf sum (+ sum
+                   (* 10 (d1-string->number (cl-ppcre:scan-to-strings start-scanner line)))
+                   (d1-string->number
+                    (reverse (cl-ppcre:scan-to-strings end-scanner (reverse line)))))))))
 
 ;; Answer: 54504
