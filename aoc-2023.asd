@@ -14,7 +14,8 @@ Author: Janne Pakarinen <gingeralesy@gmail.com>
   :serial T
   :components ((:file "package")
                (:file "util")
-               (:file "day1"))
+               (:file "day1")
+               (:file "day2"))
   :depends-on (:asdf
                :alexandria
                :cl-ppcre
