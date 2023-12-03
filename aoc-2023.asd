@@ -15,7 +15,8 @@ Author: Janne Pakarinen <gingeralesy@gmail.com>
   :components ((:file "package")
                (:file "util")
                (:file "day1")
-               (:file "day2"))
+               (:file "day2")
+               (:file "day3"))
   :depends-on (:asdf
                :alexandria
                :cl-ppcre
