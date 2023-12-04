@@ -36,18 +36,18 @@
 ;; Answer: 26914
 
 (defun d4p2 (&optional (count 213))
-  (loop with total = count
+  (loop with lookup-array = (make-array (1+ count) :element-type '(unsigned-byte 32)
+                                                   :initial-element 0)
         with cards = (d4-data count)
-        with hand = (loop for i from 1 upto count collecting i)
-        while hand
-        for card-id = (pop hand)
-        for (lookup . numbers) = (aref cards card-id)
+        for id from (1- count) downto 1
+        for (win-nums . own-nums) = (aref cards id)
         for win-count = 0
-        do (dolist (num numbers)
-             (unless (zerop (bit lookup num))
+        do (dolist (num own-nums)
+             (unless (zerop (bit win-nums num))
                (incf win-count)
-               (let ((new (+ card-id win-count)))
-                 (unless (< count new)
-                   (incf total)
-                   (push new hand)))))
-        finally (return total)))
+               (let ((new (+ id win-count)))
+                 (when (< count new) (return))
+                 (let ((card-total (1+ (aref lookup-array new))))
+                   (incf (aref lookup-array id) card-total)))))
+        sum (aref lookup-array id) into total
+        finally (return (+ total count))))
