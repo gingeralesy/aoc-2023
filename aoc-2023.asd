@@ -16,7 +16,8 @@ Author: Janne Pakarinen <gingeralesy@gmail.com>
                (:file "util")
                (:file "day1")
                (:file "day2")
-               (:file "day3"))
+               (:file "day3")
+               (:file "day4"))
   :depends-on (:asdf
                :alexandria
                :cl-ppcre
