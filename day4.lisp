@@ -51,3 +51,5 @@
                    (incf (aref lookup-array id) card-total)))))
         sum (aref lookup-array id) into total
         finally (return (+ total count))))
+
+;; Answer: 13080971
