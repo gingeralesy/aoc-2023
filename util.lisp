@@ -2,7 +2,7 @@
 
 (deftype input-line () '(or (and keyword (eql :eof)) (simple-array character (*))))
 
-(defparameter *clean-re* (cl-ppcre:create-scanner "^(.*\\S)?\\s*$"))
+(defparameter *clean-re* (cl-ppcre:create-scanner "^(.*\\S?)\\s*$"))
 
 (defun local-file (filename &key error)
   (declare (optimize (speed 3)))
@@ -10,6 +10,17 @@
     (when (and error (not (probe-file file)))
       (error "Missing file: ~a" filename))
     file))
+
+(defmacro with-local-file ((stream-var filename) &body body)
+  (let ((filename-var (gensym "FILENAME"))
+        (file-var (gensym "FILE")))
+    `(let* ((,filename-var ,filename)
+            (,file-var (local-file ,filename-var :error T)))
+       (with-open-file (,stream-var ,file-var :direction :input
+                                              :element-type 'character
+                                              :if-does-not-exist :error
+                                              :external-format :utf-8)
+         ,@body))))
 
 (defun clean-line (line)
   (declare (optimize (speed 3)))
@@ -20,23 +31,19 @@
         (or (and match groups (aref groups 0)) ""))
       line))
 
+(declaim (inline read-clean-line))
+(defun read-clean-line (stream)
+  (declare (optimize (speed 3)))
+  (let ((line (read-line stream NIL :eof)))
+    (if (eql line :eof) line (clean-line line))))
+
 (defmacro do-file ((line-var filename &optional return-value) &body body)
-  (let ((file-var (gensym "FILE"))
-        (filename-var (gensym "FILENAME"))
-        (stream-var (gensym "STREAM"))
-        (raw-line-var (gensym "LINE")))
-    `(let* ((,filename-var ,filename)
-            (,file-var (local-file ,filename-var :error T)))
-       (with-open-file (,stream-var ,file-var :direction :input
-                                              :element-type 'character
-                                              :if-does-not-exist :error
-                                              :external-format :utf-8)
-         (loop for ,raw-line-var of-type input-line = (read-line ,stream-var NIL :eof)
-               until (eql ,raw-line-var :eof)
-               do (let ((,line-var (clean-line ,raw-line-var)))
-                    (declare (type input-line ,line-var))
-                    ,@body)
-               finally (return ,return-value))))))
+  (let ((stream-var (gensym "STREAM")))
+    `(with-local-file (,stream-var ,filename)
+       (loop for ,line-var of-type input-line = (read-clean-line ,stream-var)
+             until (eql ,line-var :eof)
+             do (progn ,@body)
+             finally (return ,return-value)))))
 
 (declaim (inline u32 u64))
 (defun u32 (value) (logand #xffffffff value))
