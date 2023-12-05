@@ -2,7 +2,7 @@
 
 ;; https://adventofcode.com/2023/day/5
 
-(defparameter *d5-keys* '(:seed :soil :fertilizer :water :light :temperature :humidity :location))
+(defparameter *d5-keys* #(:seed :soil :fertilizer :water :light :temperature :humidity :location))
 
 (defun d5-data ()
   (with-local-file (stream "day5.txt")
@@ -37,8 +37,8 @@
                        (setf tail (cdr tail)))
                       (T ;; New numbers.
                        (setf cur-map-nums (list (parse-nums line)))
-                       (setf tail cur-map-nums)))
-                    (setf (gethash cur-map almanac) cur-map-nums))
+                       (setf tail cur-map-nums)
+                       (setf (gethash cur-map almanac) cur-map-nums))))
                    (T ;; Expect a new map named after an empty line.
                     (setf cur-map (parse-map-name line))
                     (setf cur-map-nums ())
@@ -46,22 +46,28 @@
               finally (return almanac))))))
 
 (defun d5-convert (value from to almanac)
-  (loop for keys on (loop for key-start on *d5-keys*
-                          until (eql from (car key-start))
-                          finally (return key-start))
-        for cur = (car keys)
-        for next = (cadr keys)
-        for prev-value = value then cur-value
-        for cur-value = (loop with key = `(,cur . ,next)
-                              for (to-value from-start from-count) in (gethash key almanac)
-                              for match-p = (and (<= from-start prev-value)
-                                                 (< prev-value (+ from-start from-count)))
-                              until match-p
-                              finally (return (if match-p
-                                                  (+ to-value (- prev-value from-start))
-                                                  prev-value)))
+  (loop with keys of-type (simple-vector 8) = *d5-keys*
+        with from-index = (or (position from keys) (error "Invalid key: ~a" from))
+        with to-index = (or (position to keys) (error "Invalid key: ~a" to))
+        with reverse-p = (< to-index from-index)
+        with delta = (if reverse-p -1 +1)
+        for index = (+ from-index delta) then (+ index delta)
+        until (if reverse-p (< index to-index) (< to-index index))
+        for prev = (svref keys from-index) then next
+        for next = (svref keys index)
+        for key = (if reverse-p `(,next . ,prev) `(,prev . ,next))
+        for prev-value = value then next-value
+        for next-value = (loop for (value-a value-b count) in (gethash key almanac)
+                               for to-value = (if reverse-p value-b value-a)
+                               for from-start = (if reverse-p value-a value-b)
+                               for match-p = (and (<= from-start prev-value)
+                                                  (< prev-value (+ from-start count)))
+                               until match-p
+                               finally (return (if match-p
+                                                   (+ to-value (- prev-value from-start))
+                                                   prev-value)))
         until (eql to next)
-        finally (return cur-value)))
+        finally (return next-value)))
 
 (defun d5p1 ()
   (loop with almanac = (d5-data)
@@ -71,12 +77,15 @@
 ;; Answer: 31599214
 
 (defun d5p2 ()
-  ;; FIXME: This is terrible and takes forever.
+  ;; FIXME: This is still brute-force.
   (loop with almanac = (d5-data)
         with seeds = (gethash :seeds almanac)
-        for (seed-start seed-count) on seeds by #'cddr
-        minimizing (loop for i from 0 below seed-count
-                         for seed = (+ i seed-start)
-                         minimizing (d5-convert seed :seed :location almanac))))
+        for location from 0
+        for seed = (d5-convert location :location :seed almanac)
+        until (loop for (seed-start seed-count) on seeds by #'cddr
+                    for found-p = (and (<= seed-start seed) (< seed (+ seed-start seed-count)))
+                    until found-p
+                    finally (return found-p))
+        finally (return location)))
 
 ;; Answer: 20358599
