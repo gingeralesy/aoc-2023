@@ -71,9 +71,10 @@
   (let* ((time-distance (d6-data T))
          (time (car time-distance))
          (target (cdr time-distance))
-         (half (floor time 2)))
+         (half (floor time 2))
+         (low (d6-bsearch NIL 0 half target time))
+         (high (d6-bsearch T (1+ half) time target time)))
     ;; Note: +1 because the upper edge is inclusive.
-    (- (1+ (d6-bsearch T (1+ half) time target time))
-       (d6-bsearch NIL 0 half target time))))
+    (values (- (1+ high) low) low high)))
 
 ;; Answer: 41382569
