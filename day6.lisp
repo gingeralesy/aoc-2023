@@ -64,7 +64,7 @@
              ((< distance target) (setf left (1+ hold)))
              ((< target distance) (setf right (1- hold))))
         until (or (= distance target) (< right left))
-        finally (return
+        finally (return ;; This shouldn't be off more than by one but I'm looping just in case.
                   (if (< target distance)
                       (loop for value = hold then (if high-p (1+ value) (1- value))
                             while (< target (d6-distance value limit))
