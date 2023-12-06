@@ -69,6 +69,16 @@
         until (eql to next)
         finally (return next-value)))
 
+;; (defun d5-flatten (almanac)
+;;   (flet ((merge (start end)
+;;            (let (())))))
+;;   (loop with keys of-type (simple-vector 8) = *d5-keys*
+;;         with start = (svref keys 0)
+;;         for index from 1 below 7
+;;         for mid = (svref keys index)
+;;         for next = (svref keys (1+ index))
+;;         do (merge (gethash `(,start . ,mid) almanac) (gethash `(,mid . ,next) almanac))))
+
 (defun d5p1 ()
   (loop with almanac = (d5-data)
         for seed in (gethash :seeds almanac)
