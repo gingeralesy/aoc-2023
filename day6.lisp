@@ -37,8 +37,8 @@
         do (ecase method
              (:quadratic
               (multiple-value-bind (low high) (quadratic 1 time distance)
-                (setf min-hold low)
-                (setf max-hold high)))
+                (setf min-hold (ceiling low))
+                (setf max-hold (floor high))))
              (:search
               (let (found-p)
                 (dotimes (i time)
@@ -83,7 +83,9 @@
     (ecase method
       (:quadratic
        (multiple-value-bind (low high) (quadratic 1 (car time-distance) (cdr time-distance))
-         (values (- (1+ high) low) low high)))
+         (let ((low (ceiling low))
+               (high (floor high)))
+           (values (- (1+ high) low) low high))))
       (:search
        (let* ((time (car time-distance))
               (target (cdr time-distance))

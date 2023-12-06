@@ -56,11 +56,11 @@
          (format T "~&Run took ~3$ sec.~%"
                  (local-time:timestamp-difference (local-time:now) ,start-var))))))
 
+(declaim (inline quadratic))
 (defun quadratic (a b c)
   (declare (type (signed-byte 64) a b c))
   (let* ((a (coerce a 'double-float))
          (b (coerce b 'double-float))
          (c (coerce c 'double-float))
-         (sqrt (sqrt (- (* b b) (* 4 a c)))))
-    (values (nth-value 0 (ceiling (- b sqrt) (* 2 a)))
-            (nth-value 0 (floor (+ b sqrt) (* 2 a))))))
+         (sqrt (sqrt (- (* b b) (* 4.0d0 a c)))))
+    (values (/ (- b sqrt) (* 2.0d0 a)) (/ (+ b sqrt) (* 2.0d0 a)))))
