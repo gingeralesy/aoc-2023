@@ -25,7 +25,7 @@
 
 (declaim (inline d6-distance))
 (defun d6-distance (hold limit)
-  (* hold (max 0 (- limit hold))))
+  (* hold (if (< limit hold) 0 (u64 (- limit hold)))))
 
 (defun d6p1 (&optional (method :quadratic))
   (loop with (times . distances) = (d6-data)
@@ -56,22 +56,26 @@
 ;; Answer: 840336
 
 (defun d6-bsearch (high-p base top target limit)
-  (loop with left = base
-        with right = top
-        for hold = (floor (+ left right) 2)
-        for distance = (d6-distance hold limit)
+  (declare (type (unsigned-byte 64) base top target limit))
+  (declare (optimize (speed 3)))
+  (loop with left of-type (unsigned-byte 64) = base
+        with right of-type (unsigned-byte 64) = top
+        for hold of-type (unsigned-byte 64) = (floor (u64 (+ left right)) 2)
+        for distance of-type (unsigned-byte 64) = (u64 (d6-distance hold limit))
         do (cond
              ((< distance target) (setf left (1+ hold)))
              ((< target distance) (setf right (1- hold))))
         until (or (= distance target) (< right left))
         finally (return ;; This shouldn't be off more than by one but I'm looping just in case.
                   (if (< target distance)
-                      (loop for value = hold then (if high-p (1+ value) (1- value))
-                            while (< target (d6-distance value limit))
-                            finally (return (if high-p (1- value) (1+ value))))
-                      (loop for value = hold then (if high-p (1- value) (1+ value))
-                            until (< target (d6-distance value limit))
-                            finally (return value))))))
+                      (loop for value of-type (unsigned-byte 64) = hold
+                            then (if high-p (1+ value) (1- value))
+                            while (< target (u64 (d6-distance value limit)))
+                            finally (return (u32 (if high-p (1- value) (1+ value)))))
+                      (loop for value of-type (unsigned-byte 64) = hold
+                            then (if high-p (1- value) (1+ value))
+                            until (< target (u64 (d6-distance value limit)))
+                            finally (return (u32 value)))))))
 
 (defun d6p2 (&optional (method :quadratic))
   (let ((time-distance (d6-data T)))
