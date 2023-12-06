@@ -27,23 +27,29 @@
 (defun d6-distance (hold limit)
   (* hold (max 0 (- limit hold))))
 
-(defun d6p1 ()
+(defun d6p1 (&optional (method :quadratic))
   (loop with (times . distances) = (d6-data)
         with retval = 1
         for time in times
         for distance in distances
         for min-hold = time
         for max-hold = 0
-        for found-p = nil
-        do (dotimes (i time)
-             (let ((dist (d6-distance i time)))
-               (cond
-                 ((and found-p (< dist distance))
-                  (return))
-                 ((< distance dist)
-                  (when (< i min-hold) (setf min-hold i))
-                  (setf max-hold i)
-                  (setf found-p t)))))
+        do (ecase method
+             (:quadratic
+              (multiple-value-bind (low high) (quadratic 1 time distance)
+                (setf min-hold low)
+                (setf max-hold high)))
+             (:search
+              (let (found-p)
+                (dotimes (i time)
+                  (let ((dist (d6-distance i time)))
+                    (cond
+                      ((and found-p (< dist distance))
+                       (return))
+                      ((< distance dist)
+                       (when (< i min-hold) (setf min-hold i))
+                       (setf max-hold i)
+                       (setf found-p t))))))))
         do (setf retval (* retval (1+ (- max-hold min-hold))))
         finally (return retval)))
 
@@ -67,14 +73,19 @@
                             until (< target (d6-distance value limit))
                             finally (return value))))))
 
-(defun d6p2 ()
-  (let* ((time-distance (d6-data T))
-         (time (car time-distance))
-         (target (cdr time-distance))
-         (half (floor time 2))
-         (low (d6-bsearch NIL 0 half target time))
-         (high (d6-bsearch T (1+ half) time target time)))
-    ;; Note: +1 because the upper edge is inclusive.
-    (values (- (1+ high) low) low high)))
+(defun d6p2 (&optional (method :quadratic))
+  (let ((time-distance (d6-data T)))
+    ;; Note: Add +1 to high end for the range because the upper edge is inclusive.
+    (ecase method
+      (:quadratic
+       (multiple-value-bind (low high) (quadratic 1 (car time-distance) (cdr time-distance))
+         (values (- (1+ high) low) low high)))
+      (:search
+       (let* ((time (car time-distance))
+              (target (cdr time-distance))
+              (half (floor time 2))
+              (low (d6-bsearch NIL 0 half target time))
+              (high (d6-bsearch T (1+ half) time target time)))
+         (values (- (1+ high) low) low high))))))
 
 ;; Answer: 41382569
