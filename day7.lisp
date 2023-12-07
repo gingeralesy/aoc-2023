@@ -99,3 +99,5 @@
   (loop for hand in (sort (d7-data T) #'d7<)
         counting hand into i
         sum (* i (third hand))))
+
+;; Answer: 251735672
