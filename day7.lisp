@@ -3,6 +3,8 @@
 ;; https://adventofcode.com/2023/day/7
 
 (defun d7-hand-type (hand)
+  ;; TODO: Checking for jokers like this is silly. Just set its count to the highest card
+  ;;       count of any other card.
   (let ((checked ()))
     (flet ((card-count (card)
              (loop for i from 0 below 5
