@@ -19,16 +19,13 @@
       (when (find-count 5) (return-from d7-hand-type 7)) ;; Five of a kind.
       (when (find-count 4) (return-from d7-hand-type 6)) ;; Four of a kind.
       (when (find-count 3)
-        ;; If there are two jokers it cannot be a full because the rest of the cards are different.
-        ;; If there is one joker we need a two cards with a count of three.
-        (let ((joker-count (or (cdr (find-card 1)) 0))
-              (two-cards (find-count 2)))
-          (when (and (< joker-count 2)
-                     (or (and (< joker-count 1) two-cards)
-                         (loop for check in checked
-                               when (= 3 (cdr check)) count check into threes
-                               finally (return (= 2 threes)))))
-            (return-from d7-hand-type 5))) ;; Full house.
+        (when (ecase (or (cdr (find-card 1)) 0) ;; Joker count.
+                (2 NIL) ;; Two jokers, all the rest of the cards are different. No full house.
+                (1 (loop for check in checked ;; One joker, need two counts of three.
+                         when (= 3 (cdr check)) count check into three-count
+                         finally (return (= 2 three-count))))
+                (0 (find-count 2))) ;; No jokers? The only other one should be a pair.
+          (return-from d7-hand-type 5)) ;; Full house.
         (return-from d7-hand-type 4)) ;; Three of a kind.
       (loop for check in checked
             when (= 2 (cdr check)) count check into pair-count
