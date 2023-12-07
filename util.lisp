@@ -41,6 +41,7 @@
   (let ((stream-var (gensym "STREAM")))
     `(with-local-file (,stream-var ,filename)
        (loop for ,line-var of-type input-line = (read-clean-line ,stream-var)
+             unless ,line-var do (error "Unexpected error reading file: ~a" ,filename)
              until (eql ,line-var :eof)
              do (progn ,@body)
              finally (return ,return-value)))))
