@@ -20,8 +20,10 @@ Author: Janne Pakarinen <gingeralesy@gmail.com>
                (:file "day4")
                (:file "day5")
                (:file "day6")
-               (:file "day7"))
+               (:file "day7")
+               (:file "day8"))
   :depends-on (:asdf
                :alexandria
                :cl-ppcre
-               :local-time))
+               :local-time
+               :bordeaux-threads))
