@@ -14,6 +14,7 @@ Author: Janne Pakarinen <gingeralesy@gmail.com>
   :serial T
   :components ((:file "package")
                (:file "util")
+               (:file "queue")
                (:file "day1")
                (:file "day2")
                (:file "day3")
