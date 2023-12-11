@@ -2,6 +2,22 @@
 
 (deftype input-line () '(or (and keyword (eql :eof)) (simple-array character (*))))
 
+(defstruct (ipoint (:constructor ipoint (x y)))
+  (x 0 :type (signed-byte 64))
+  (y 0 :type (signed-byte 64)))
+
+(defstruct (upoint (:constructor upoint (x y)))
+  (x 0 :type (unsigned-byte 64))
+  (y 0 :type (unsigned-byte 64)))
+
+(defstruct (fpoint (:constructor fpoint (x y)))
+  (x 0.0 :type single-float)
+  (y 0.0 :type single-float))
+
+(defstruct (dpoint (:constructor dpoint (x y)))
+  (x 0.0d0 :type double-float)
+  (y 0.0d0 :type double-float))
+
 (defparameter *clean-re* (cl-ppcre:create-scanner "^(.*\\S?)\\s*$"))
 
 (defun local-file (filename &key error)
