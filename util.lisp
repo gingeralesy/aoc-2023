@@ -69,7 +69,7 @@
 (defmacro profile-run (&body body)
   (let ((start-var (gensym "START")))
     `(let ((,start-var (local-time:now)))
-       (prog1 (progn ,@body)
+       (unwind-protect (progn ,@body)
          (format T "~&Run took ~3$ sec.~%"
                  (local-time:timestamp-difference (local-time:now) ,start-var))))))
 
