@@ -88,11 +88,30 @@
           do (queue-push item copy)
           finally (return copy))))
 
-(defun queue-find (item queue &optional (key #'identity) (test #'eql))
+(defun queue-find (item queue &key (key #'identity) (test #'eql))
   (declare (type list queue))
   (declare (type function key test))
   (declare (optimize (speed 3)))
   (find item (the list (car queue)) :key key :test test))
+
+(defun queue-remove (item queue &key (key #'identity) (test #'eql))
+  (declare (type list queue))
+  (declare (type function key test))
+  (declare (optimize (speed 3)))
+  (loop for prev = NIL then slot
+        for slot on (the list (car queue))
+        for match-p = (funcall test (funcall key (car slot)) item)
+        until match-p
+        finally (return
+                  (when match-p
+                    (cond
+                      (prev
+                       (setf (cdr prev) (cdr slot))
+                       (unless (cdr slot) (setf (cdr queue) prev)))
+                      (T
+                       (setf (car queue) (cdr slot))
+                       (unless (cdr slot) (setf (cdr queue) NIL))))
+                    (car slot)))))
 
 (defstruct (aqueue (:constructor %make-aqueue ()))
   (count 0 :type (unsigned-byte 32))
